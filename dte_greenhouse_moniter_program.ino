@@ -1,9 +1,10 @@
 /*
  * This program runs the control box for the greenhouse moniter 
  * and toggles as reley when specific conditions are met
- * version 3 -> reads in the dht sensor and
+ * version 3.1 -> reads in the dht sensor and
  * displays the sensor readings on a simple 2 line Alphanumeric LED display
  * Also uses an interupt to toggle the display backlight when a button is pressed
+ * 3.1 -> fixed the delay until backlight turning off bug
  */
 
 //include the libarys that are required 
@@ -17,14 +18,15 @@ LiquidCrystal_I2C lcd(0x27,20,4);
 //set the port for the temp and humidity sensor
 DHT11 dht11(2);
 
-//interupt
+//set variables for interupt
 const int interruptPin = 3;
 bool ledbacklight = LOW;
+int buttonLastPressed = 0;
 
 
 void setup()
 {
-   // initialize the lcd display
+  // initialize the lcd display
   lcd.init();                      
   lcd.backlight();
   lcd.setCursor(3,0);
@@ -33,24 +35,27 @@ void setup()
   Serial.begin(9600);
   pinMode(8, OUTPUT); //relay output
 
-  //atatch an interupt for ottggling backlight
+  //atatch an interupt for toggling the backlight
   pinMode(interruptPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(interruptPin), toggleDisplayBacklight, RISING);
+  attachInterrupt(digitalPinToInterrupt(interruptPin),enableBacklight, RISING);
+  lcd.noBacklight();
 }
 
-void toggleDisplayBacklight()
+//This method is used to toggle the backlight on attached to an interupt
+void enableBacklight()
 {
-ledbacklight = !ledbacklight;
-Serial.println("Interupt");
+ledbacklight = true;
+buttonLastPressed = millis();
 }
 
 
 void loop()
 {
     //declare constants and variables
+    const int humidityLimit = 42; //placeholder limit value
+    const int temperatureLimit = 23; //placeholder limit value
     int temperature = 0;
     int humidity = 0;
-    const int temperatureLimit = 42; //placeholder limit value
 
     //Read the temperature and humidity
     int result = dht11.readTemperatureHumidity(temperature, humidity);
@@ -63,6 +68,13 @@ void loop()
     {
     lcd.noBacklight();
     }
+    
+    if ((millis() > buttonLastPressed + 5000))
+    {
+    Serial.println("Time out: backlight off");
+    ledbacklight = false;
+    }
+
   
     // Check the results of the readings.
     if (result == 0) {
@@ -91,6 +103,7 @@ void loop()
           
         } else
         {
+          //deactivate the relay if the temp is too low
           digitalWrite(8, LOW); 
         }
     } else {
