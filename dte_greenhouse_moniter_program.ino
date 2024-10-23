@@ -21,7 +21,7 @@ DHT11 dht11(2);
 //set variables for interupt
 const int interruptPin = 3;
 bool ledbacklight = LOW;
-int buttonLastPressed = 0;
+unsigned long buttonLastPressed = 0;
 
 
 void setup()
@@ -37,7 +37,7 @@ void setup()
 
   //atatch an interupt for toggling the backlight
   pinMode(interruptPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(interruptPin),enableBacklight, RISING);
+  attachInterrupt(digitalPinToInterrupt(interruptPin),enableBacklight, FALLING);
   lcd.noBacklight();
 }
 
@@ -45,7 +45,7 @@ void setup()
 void enableBacklight()
 {
 ledbacklight = true;
-buttonLastPressed = millis();
+buttonLastPressed = abs(millis());
 }
 
 
@@ -68,7 +68,8 @@ void loop()
     {
     lcd.noBacklight();
     }
-    
+
+    Serial.println(buttonLastPressed);
     if ((millis() > buttonLastPressed + 5000))
     {
     Serial.println("Time out: backlight off");
@@ -89,7 +90,7 @@ void loop()
          lcd.setCursor(0,0);
          lcd.print("Temp : ");
          lcd.print(temperature);
-         lcd.print("°C");
+         lcd.print(" C");
          lcd.setCursor(0,1);
          lcd.print("Humid : ");
          lcd.print(humidity);
@@ -97,7 +98,7 @@ void loop()
         
         if (humidity > temperatureLimit)
         {
-          Serial.println("Temp is above limit!");
+          //Serial.println("Temp is above limit!");
           //activate the relay if the temp is too high
           digitalWrite(8, HIGH); 
           
