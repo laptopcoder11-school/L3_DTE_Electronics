@@ -24,10 +24,10 @@ unsigned long buttonLastPressed = 0;
 
 //set variables for customisation of threshholds
 //test values
-int MIN_THEP = 0;
+int MIN_THEP = 22;
 int MAX_TEMP = 24;
-int MIN_HUMID = 60;
-int MAX_HUMID = 65;
+int MIN_HUMID = 65;
+int MAX_HUMID = 70;
 bool RequireTempThreshhold = false;
 bool RequireHumidThreshhold = true;
 
@@ -103,7 +103,7 @@ void loop()
          lcd.print("%");
 
       //check if the relay should be turned on or off
-       bool ConditionsMet = (!RequireTempThreshhold || (temperature > MIN_THEP && temperature < MAX_TEMP)) && (!RequireHumidThreshhold || (humidity > MIN_HUMID && humidity < MAX_HUMID));
+       bool ConditionsMet = (!RequireTempThreshhold || (temperature >= MIN_THEP && temperature <= MAX_TEMP)) && (!RequireHumidThreshhold || (humidity >= MIN_HUMID && humidity <= MAX_HUMID));
 
         //toggle the relay
         if (ConditionsMet)
