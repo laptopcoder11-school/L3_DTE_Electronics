@@ -1,10 +1,9 @@
 /*
  * This program runs the control box for the greenhouse moniter 
  * and toggles as reley when specific conditions are met
- * version 3.1 -> reads in the dht sensor and
+ * It reads in the dht sensor and
  * displays the sensor readings on a simple 2 line Alphanumeric LED display
- * Also uses an interupt to toggle the display backlight when a button is pressed
- * 3.1 -> fixed the delay until backlight turning off bug
+ * Uses an interupt to toggle the display backlight when a button is pressed
  */
 
 //include the libarys that are required 
@@ -23,6 +22,14 @@ const int interruptPin = 3;
 bool ledbacklight = LOW;
 unsigned long buttonLastPressed = 0;
 
+//set variables for customisation of threshholds
+//test values
+int MIN_THEP = 0;
+int MAX_TEMP = 24;
+int MIN_HUMID = 60;
+int MAX_HUMID = 65;
+bool RequireTempThreshhold = false;
+bool RequireHumidThreshhold = true;
 
 void setup()
 {
@@ -69,15 +76,14 @@ void loop()
     lcd.noBacklight();
     }
 
-    Serial.println(buttonLastPressed);
+    //turn off the backlight after a delay
     if ((millis() > buttonLastPressed + 5000))
     {
     Serial.println("Time out: backlight off");
     ledbacklight = false;
     }
 
-  
-    // Check the results of the readings.
+    // Check and display the results of the readings.
     if (result == 0) {
         //serial print the temp and humidity for debugging
         Serial.print("Temperature: ");
@@ -88,23 +94,23 @@ void loop()
 
          //draw the output on the LCD
          lcd.setCursor(0,0);
-         lcd.print("Temp : ");
+         lcd.print("Tempurature : ");
          lcd.print(temperature);
          lcd.print(" C");
          lcd.setCursor(0,1);
-         lcd.print("Humid : ");
+         lcd.print("Humidity : ");
          lcd.print(humidity);
          lcd.print("%");
-        
-        if (humidity > temperatureLimit)
+
+      //check if the relay should be turned on or off
+       bool ConditionsMet = (!RequireTempThreshhold || (temperature > MIN_THEP && temperature < MAX_TEMP)) && (!RequireHumidThreshhold || (humidity > MIN_HUMID && humidity < MAX_HUMID));
+
+        //toggle the relay
+        if (ConditionsMet)
         {
-          //Serial.println("Temp is above limit!");
-          //activate the relay if the temp is too high
           digitalWrite(8, HIGH); 
-          
         } else
         {
-          //deactivate the relay if the temp is too low
           digitalWrite(8, LOW); 
         }
     } else {
